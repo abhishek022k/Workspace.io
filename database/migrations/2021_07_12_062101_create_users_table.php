@@ -17,9 +17,7 @@ class CreateUsersTable extends Migration
             $table->mediumIncrements('user_id');
             $table->string('email')->unique();
             $table->char('password',255);
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('username')->unique();
+            $table->string('name');
             $table->tinyInteger('admin_access')->default(0);
         });
     }
