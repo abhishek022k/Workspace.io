@@ -2,6 +2,9 @@
 
 /** @var \Laravel\Lumen\Routing\Router $router */
 
+use App\Http\Controllers\AuthController;
+use \App\Models\User;
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -17,3 +20,8 @@ $router->get('/', function () use ($router) {
     return "HELLO WORLD!";
     // return $router->app->version();
 });
+
+$router->post('auth/login', 'AuthController@login');
+$router->post('auth/signup', 'AuthController@register');
+$router->get('auth/user','AuthController@getAuthUser');
+$router->get('auth/logout','AuthController@logout');
