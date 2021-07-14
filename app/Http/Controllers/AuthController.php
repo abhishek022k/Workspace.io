@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\VerifyUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -30,6 +31,16 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        $verification_code = Hash::make(str_random(10));
+        $verify = VerifyUser::create([
+            'user_id' => $user->user_id,
+            'verification_code' => $verification_code,
+        ]);
+        /*
+            code to send email with the $verification_code
+        */
+
         return response()->json([
             'message' => 'User created successfully',
             'user' => $user,
@@ -64,6 +75,13 @@ class AuthController extends Controller
     }
 
     /*
+     * Veriifies new user
+     * @return JSONresponse
+     */
+    public function userVerify($verification_code){
+        
+    }
+    /*
      * logs out a user.
      * @return JSONResponse
      */
@@ -79,6 +97,8 @@ class AuthController extends Controller
      * @return JSONResponse
      */
     public function getAuthUser(){
+        // $user = Auth::user();
+        // dd($user);
         return response()->json([
             'user' => Auth::user(),
         ],200);
