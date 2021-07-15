@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\VerificationMail;
 use App\Models\User;
-use App\Models\VerifyUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -25,27 +25,20 @@ class AuthController extends Controller
         if($validator->fails()){
             return response()->json(['errors'=>$validator->errors()->all()],422);
         }
-
+        $code = str_replace('.','',urlencode(str_replace('/','',Hash::make(str_random(10)))));      
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'verification_code'=> $code,
         ]);
-
-        $verification_code = Hash::make(str_random(10));
-        $verify = VerifyUser::create([
-            'user_id' => $user->user_id,
-            'verification_code' => $verification_code,
-        ]);
-        /*
-            code to send email with the $verification_code
-        */
-
+        Mail::to($request->email)->send(new VerificationMail($user,$code));
         return response()->json([
-            'message' => 'User created successfully',
+            'message' => 'User created, please click verification link on mail to activate account',
             'user' => $user,
         ],201);
     }
+
 
     /*
      * Login a user and return a JWT token.
@@ -61,6 +54,7 @@ class AuthController extends Controller
         return $this->tokenResponse($token);
     }
 
+
     /*
      * returns token array.
      * @param $token string
@@ -74,13 +68,28 @@ class AuthController extends Controller
         ]);
     }
 
+
     /*
      * Veriifies new user
      * @return JSONresponse
      */
-    public function userVerify($verification_code){
-        
+    public function userVerify(Request $request){
+        $code = $request->code;
+        $user = User::where('verification_code', '=', $code)->first();
+        if($user === null){
+            return response()->json([
+                'message' => 'Invalid'
+            ],401);
+        }
+        $user->verified = true;
+        $user->verification_code = NULL;
+        $user->save();
+        return response()->json([
+            'message'=>'user verified successfully'
+        ]);
     }
+
+
     /*
      * logs out a user.
      * @return JSONResponse
@@ -91,6 +100,7 @@ class AuthController extends Controller
             'message' => 'successfully logged out',
         ],200);
     }
+
 
     /*
      * returns logged in user.

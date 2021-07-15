@@ -23,9 +23,11 @@ $router->get('/', function () use ($router) {
 
 $router->post('auth/login', 'AuthController@login');
 $router->post('auth/signup', 'AuthController@register');
-$router->get('auth/user','AuthController@getAuthUser');
+// $router->get('auth/user','AuthController@getAuthUser');
 
-// $router->group(['middleware'=>'auth'], function($router){
-//     $router->get('auth/user','AuthController@getAuthUser');
-//     $router->post('auth/logout','AuthController@logout');
-// });
+$router->group(['middleware'=>'auth'], function($router){
+    $router->get('auth/user','AuthController@getAuthUser');
+    $router->post('auth/logout','AuthController@logout');
+});
+
+$router->get('auth/verify/{code}','AuthController@userVerify');
