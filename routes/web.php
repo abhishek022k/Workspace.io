@@ -27,9 +27,15 @@ $router->post('auth/signup', 'AuthController@register');
 
 $router->group(['middleware'=>['auth','checkAdmin']], function($router){
     $router->get('auth/user','AuthController@getAuthUser');
+    $router->get('users/list','UserController@showUsers');
 });
 $router->group(['middleware'=> 'auth'],function($router){
     $router->post('auth/logout','AuthController@logout');
 });
-
 $router->get('auth/verify/{code}','AuthController@userVerify');
+$router->post('auth/forgot-password','AuthController@resetPasswordMail');
+$router->get('auth/reset-token/{code}','AuthController@checkPasswordToken');
+$router->post('auth/password-reset','AuthController@resetPassword');
+
+
+

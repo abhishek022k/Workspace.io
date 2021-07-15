@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PasswordReset;
 use App\Mail\VerificationMail;
+use App\Models\PasswordChange;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,9 +16,10 @@ class AuthController extends Controller
 {
     /*
      * Registers a user.
-     * @return JSONResponse
+     * @return JSON response
      */
-    public function register(Request $request){
+    public function register(Request $request)
+    {
         $validator = Validator::make($request->all(),[
             'name' => 'required|string|between:2,60',
             'email' => 'required|email|max:255|unique:users',
@@ -42,9 +45,10 @@ class AuthController extends Controller
 
     /*
      * Login a user and return a JWT token.
-     * @return JSONResponse
+     * @return JSON response
      */
-    public function login(Request $request){
+    public function login(Request $request)
+    {
         $credentials = $request->only(['email','password']);
         if(! $token = Auth::attempt($credentials)){
             return response()->json([
@@ -64,9 +68,10 @@ class AuthController extends Controller
     /*
      * returns token array.
      * @param $token string
-     * @return JSONResponse
+     * @return JSON response
      */
-    protected function tokenResponse($token){
+    protected function tokenResponse($token)
+    {
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
@@ -77,9 +82,10 @@ class AuthController extends Controller
 
     /*
      * Veriifies new user
-     * @return JSONresponse
+     * @return JSON response
      */
-    public function userVerify(Request $request){
+    public function userVerify(Request $request)
+    {
         $code = $request->code;
         $user = User::where('verification_code', '=', $code)->first();
         if($user === null){
@@ -98,9 +104,10 @@ class AuthController extends Controller
 
     /*
      * logs out a user.
-     * @return JSONResponse
+     * @return JSON response
      */
-    public function logout(){
+    public function logout()
+    {
         Auth::logout();
         return response()->json([
             'message' => 'successfully logged out',
@@ -110,11 +117,81 @@ class AuthController extends Controller
 
     /*
      * returns logged in user.
-     * @return JSONResponse
+     * @return JSON response
      */
-    public function getAuthUser(){
+    public function getAuthUser()
+    {
         return response()->json([
             'user' => Auth::user(),
+        ],200);
+    }
+
+
+    /*
+     * sends mail to reset password
+     * @return JSON response
+     */
+    public function resetPasswordMail(Request $request)
+    {
+        $user = User::where('email',$request->email) -> first();
+        if(!($user->exists())){
+            return response()->json([
+                'message' => 'user with this email does not exist',
+            ],401);
+        }
+        $token = str_replace('.','',urlencode(str_replace('/','',Hash::make(str_random(10)))));      
+        PasswordChange::create([
+            'email' => $request->email,
+            'token'=> $token,
+        ]);
+        Mail::to($request->email)->send(new PasswordReset($token,$request->email));
+        return response()->json([
+            'message' => 'Password reset link has been sent to your email',
+        ],201);
+
+    }
+
+    /*
+     * Verifies token for password change
+     * @return JSON response
+     */
+    public function checkPasswordToken(Request $request)
+    {
+        $code = $request->code;
+        $pass_change = PasswordChange::where('token', $code)->first();
+        if($pass_change === null){
+            return response()->json([
+                'message' => 'Invalid'
+            ],401);
+        }
+        return response()->json([
+            'message'=>'password token verified. Renders new password view',
+            'token' => $code,
+        ],200);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(),[
+            'new_password' => 'required|min:6',
+            'token' => 'required',
+        ]);
+        if($validator->fails()){
+            return response()->json(['errors'=>$validator->errors()->all()],422);
+        }
+        $pass_change = PasswordChange::where('token',$request->token)->first();
+        if(!$pass_change){
+            return response()->json([
+                'message' => 'invalid token'
+            ],401);
+        }
+        $user = User::where('email',$pass_change->email) -> first();
+        $user->password = Hash::make($request->new_password);
+        $pass_change->token = NULL;
+        $pass_change->save();
+        $user->save();
+        return response()->json([
+            'message' => 'password changed successfully'
         ],200);
     }
 
