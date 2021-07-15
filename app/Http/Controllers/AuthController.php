@@ -139,6 +139,11 @@ class AuthController extends Controller
                 'message' => 'user with this email does not exist',
             ],401);
         }
+        if($user->verified){
+            return response()->json([
+                'message'=>'account not yet verified. Please click email verification link in your email.'
+            ],401);
+        }
         $token = str_replace('.','',urlencode(str_replace('/','',Hash::make(str_random(10)))));      
         PasswordChange::create([
             'email' => $request->email,
@@ -170,6 +175,11 @@ class AuthController extends Controller
         ],200);
     }
 
+
+    /*
+     * Verifies token and resets password in Database
+     * @return JSON response
+     */
     public function resetPassword(Request $request)
     {
         $validator = Validator::make($request->all(),[
