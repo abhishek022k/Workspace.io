@@ -51,6 +51,12 @@ class AuthController extends Controller
                 'error' => 'Invalid Credentials',
             ],401);
         }
+        $user = User::where('email',$request->email) -> first();
+        if($user->verified == 0){
+            return response()->json([
+                'error' => 'User not verified. Please click the verification link sent to you via email',
+            ],401);
+        }
         return $this->tokenResponse($token);
     }
 
@@ -107,8 +113,6 @@ class AuthController extends Controller
      * @return JSONResponse
      */
     public function getAuthUser(){
-        // $user = Auth::user();
-        // dd($user);
         return response()->json([
             'user' => Auth::user(),
         ],200);

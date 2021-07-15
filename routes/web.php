@@ -25,8 +25,10 @@ $router->post('auth/login', 'AuthController@login');
 $router->post('auth/signup', 'AuthController@register');
 // $router->get('auth/user','AuthController@getAuthUser');
 
-$router->group(['middleware'=>'auth'], function($router){
+$router->group(['middleware'=>['auth','checkAdmin']], function($router){
     $router->get('auth/user','AuthController@getAuthUser');
+});
+$router->group(['middleware'=> 'auth'],function($router){
     $router->post('auth/logout','AuthController@logout');
 });
 
