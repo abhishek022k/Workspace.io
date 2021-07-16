@@ -26,10 +26,10 @@ $router->post('auth/signup', 'AuthController@register');
 // $router->get('auth/user','AuthController@getAuthUser');
 
 $router->group(['middleware'=>['auth','checkAdmin']], function($router){
-    $router->get('auth/user','AuthController@getAuthUser');
     $router->get('users/list','UserController@showUsers');
 });
 $router->group(['middleware'=> 'auth'],function($router){
+    $router->get('auth/user','AuthController@getAuthUser');
     $router->post('auth/logout','AuthController@logout');
 });
 $router->get('auth/verify/{code}','AuthController@userVerify');

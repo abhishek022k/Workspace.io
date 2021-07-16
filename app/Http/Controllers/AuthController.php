@@ -139,7 +139,7 @@ class AuthController extends Controller
                 'message' => 'user with this email does not exist',
             ],401);
         }
-        if($user->verified){
+        if(!($user->verified)){
             return response()->json([
                 'message'=>'account not yet verified. Please click email verification link in your email.'
             ],401);
