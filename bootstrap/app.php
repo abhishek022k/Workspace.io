@@ -80,6 +80,7 @@ $app->configure('jwt');
 $app->routeMiddleware([
     'auth' => App\Http\Middleware\Authenticate::class,
     'checkAdmin' => App\Http\Middleware\checkAdmin::class,
+    'cors' => App\Http\Middleware\CorsMiddleware::class,
 ]);
 
 /*

@@ -16,10 +16,15 @@ use \App\Models\User;
 |
 */
 
-$router->get('/', function () use ($router) {
-    return "HELLO WORLD!";
+$router->get('/', ['middleware' => 'cors' ,function () use ($router) {
+    // return "Backend is running!";
+    return response()->json(
+        [
+            'message' => 'Backend cors enabled',
+        ],200
+        );
     // return $router->app->version();
-});
+}]);
 
 $router->post('auth/login', 'AuthController@login');
 $router->post('auth/signup', 'AuthController@register');
