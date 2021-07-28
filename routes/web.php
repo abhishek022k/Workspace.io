@@ -16,31 +16,36 @@ use \App\Models\User;
 |
 */
 
-$router->get('/', ['middleware' => 'cors' ,function () use ($router) {
-    // return "Backend is running!";
+// $router->get('/', ['middleware' => 'cors', function () use ($router) {
+//     // return "Backend is running!";
+//     return response()->json(
+//         [
+//             'message' => 'Backend cors enabled',
+//         ],
+//         200
+//     );
+//     // return $router->app->version();
+// }]);
+$router->get('/', function () use ($router) {
     return response()->json(
         [
             'message' => 'Backend cors enabled',
-        ],200
-        );
-    // return $router->app->version();
-}]);
-
+        ],
+        200
+    );
+});
 $router->post('auth/login', 'AuthController@login');
 $router->post('auth/signup', 'AuthController@register');
 // $router->get('auth/user','AuthController@getAuthUser');
 
-$router->group(['middleware'=>['auth','checkAdmin']], function($router){
-    $router->get('users/list','UserController@showUsers');
+$router->group(['middleware' => ['auth', 'checkAdmin']], function ($router) {
+    $router->get('users/list', 'UserController@showUsers');
 });
-$router->group(['middleware'=> 'auth'],function($router){
-    $router->get('auth/user','AuthController@getAuthUser');
-    $router->post('auth/logout','AuthController@logout');
+$router->group(['middleware' => 'auth'], function ($router) {
+    $router->get('auth/user', 'AuthController@getAuthUser');
+    $router->post('auth/logout', 'AuthController@logout');
 });
-$router->get('auth/verify/{code}','AuthController@userVerify');
-$router->post('auth/forgot-password','AuthController@resetPasswordMail');
-$router->get('auth/reset-token/{code}','AuthController@checkPasswordToken');
-$router->post('auth/password-reset','AuthController@resetPassword');
-
-
-
+$router->get('auth/verify/{code}', 'AuthController@userVerify');
+$router->post('auth/forgot-password', 'AuthController@resetPasswordMail');
+$router->get('auth/reset-token/{code}', 'AuthController@checkPasswordToken');
+$router->post('auth/password-reset', 'AuthController@resetPassword');

@@ -73,14 +73,13 @@ $app->configure('jwt');
 |
 */
 
-// $app->middleware([
-//     App\Http\Middleware\ExampleMiddleware::class
-// ]);
+$app->middleware([
+    'cors' => App\Http\Middleware\CorsMiddleware::class,
+]);
 
 $app->routeMiddleware([
     'auth' => App\Http\Middleware\Authenticate::class,
     'checkAdmin' => App\Http\Middleware\checkAdmin::class,
-    'cors' => App\Http\Middleware\CorsMiddleware::class,
 ]);
 
 /*

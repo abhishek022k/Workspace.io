@@ -20,26 +20,26 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|between:2,60',
             'email' => 'required|email|max:255|unique:users',
-            'password' => 'required|min:6',
+            'password' => 'required|min:8',
         ]);
-        if($validator->fails()){
-            return response()->json(['errors'=>$validator->errors()->all()],422);
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()->all()], 422);
         }
-        $code = str_replace('.','',urlencode(str_replace('/','',Hash::make(str_random(10)))));      
+        $code = str_replace('.', '', urlencode(str_replace('/', '', Hash::make(str_random(10)))));
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'verification_code'=> $code,
+            'verification_code' => $code,
         ]);
-        Mail::to($request->email)->send(new VerificationMail($user,$code));
+        Mail::to($request->email)->send(new VerificationMail($user, $code));
         return response()->json([
             'message' => 'User created, please click verification link on mail to activate account',
             'user' => $user,
-        ],201);
+        ], 201);
     }
 
 
@@ -49,17 +49,17 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $credentials = $request->only(['email','password']);
-        if(! $token = Auth::attempt($credentials)){
+        $credentials = $request->only(['email', 'password']);
+        if (!$token = Auth::attempt($credentials)) {
             return response()->json([
-                'error' => 'Invalid Credentials',
-            ],401);
+                'message' => 'Invalid Credentials',
+            ], 401);
         }
-        $user = User::where('email',$request->email) -> first();
-        if($user->verified == 0){
+        $user = User::where('email', $request->email)->first();
+        if ($user->verified == 0) {
             return response()->json([
-                'error' => 'User not verified. Please click the verification link sent to you via email',
-            ],401);
+                'message' => 'User not verified. Please click the verification link sent to you via email',
+            ], 401);
         }
         return $this->tokenResponse($token);
     }
@@ -75,7 +75,7 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => Auth::factory()->getTTL()*60,
+            'expires_in' => Auth::factory()->getTTL() * 60,
         ]);
     }
 
@@ -88,16 +88,16 @@ class AuthController extends Controller
     {
         $code = $request->code;
         $user = User::where('verification_code', '=', $code)->first();
-        if($user === null){
+        if ($user === null) {
             return response()->json([
                 'message' => 'Invalid'
-            ],401);
+            ], 401);
         }
         $user->verified = true;
         $user->verification_code = NULL;
         $user->save();
         return response()->json([
-            'message'=>'user verified successfully'
+            'message' => 'user verified successfully'
         ]);
     }
 
@@ -111,7 +111,7 @@ class AuthController extends Controller
         Auth::logout();
         return response()->json([
             'message' => 'successfully logged out',
-        ],200);
+        ], 200);
     }
 
 
@@ -123,7 +123,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'user' => Auth::user(),
-        ],200);
+        ], 200);
     }
 
 
@@ -133,27 +133,26 @@ class AuthController extends Controller
      */
     public function resetPasswordMail(Request $request)
     {
-        $user = User::where('email',$request->email) -> first();
-        if(!($user->exists())){
+        $user = User::where('email', $request->email)->first();
+        if (!($user->exists())) {
             return response()->json([
                 'message' => 'user with this email does not exist',
-            ],401);
+            ], 401);
         }
-        if(!($user->verified)){
+        if (!($user->verified)) {
             return response()->json([
-                'message'=>'account not yet verified. Please click email verification link in your email.'
-            ],401);
+                'message' => 'account not yet verified. Please click email verification link in your email.'
+            ], 401);
         }
-        $token = str_replace('.','',urlencode(str_replace('/','',Hash::make(str_random(10)))));      
+        $token = str_replace('.', '', urlencode(str_replace('/', '', Hash::make(str_random(10)))));
         PasswordChange::create([
             'email' => $request->email,
-            'token'=> $token,
+            'token' => $token,
         ]);
-        Mail::to($request->email)->send(new PasswordReset($token,$request->email));
+        Mail::to($request->email)->send(new PasswordReset($token, $request->email));
         return response()->json([
             'message' => 'Password reset link has been sent to your email',
-        ],201);
-
+        ], 201);
     }
 
     /*
@@ -164,15 +163,15 @@ class AuthController extends Controller
     {
         $code = $request->code;
         $pass_change = PasswordChange::where('token', $code)->first();
-        if($pass_change === null){
+        if ($pass_change === null) {
             return response()->json([
                 'message' => 'Invalid'
-            ],401);
+            ], 401);
         }
         return response()->json([
-            'message'=>'password token verified. Renders new password view',
+            'message' => 'password token verified. Renders new password view',
             'token' => $code,
-        ],200);
+        ], 200);
     }
 
 
@@ -182,27 +181,26 @@ class AuthController extends Controller
      */
     public function resetPassword(Request $request)
     {
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'new_password' => 'required|min:6',
             'token' => 'required',
         ]);
-        if($validator->fails()){
-            return response()->json(['errors'=>$validator->errors()->all()],422);
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()->all()], 422);
         }
-        $pass_change = PasswordChange::where('token',$request->token)->first();
-        if(!$pass_change){
+        $pass_change = PasswordChange::where('token', $request->token)->first();
+        if (!$pass_change) {
             return response()->json([
                 'message' => 'invalid token'
-            ],401);
+            ], 401);
         }
-        $user = User::where('email',$pass_change->email) -> first();
+        $user = User::where('email', $pass_change->email)->first();
         $user->password = Hash::make($request->new_password);
         $pass_change->token = NULL;
         $pass_change->save();
         $user->save();
         return response()->json([
             'message' => 'password changed successfully'
-        ],200);
+        ], 200);
     }
-
 }
