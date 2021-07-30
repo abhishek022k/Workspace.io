@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PasswordChange extends Model
 {
@@ -15,6 +16,7 @@ class PasswordChange extends Model
         'token', 'user_id','expiry_date'
     ];
     public $timestamps = false;
+    use SoftDeletes;
 
     /**
      * The attributes excluded from the model's JSON form.
