@@ -28,17 +28,18 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->all()], 422);
         }
-        $code = str_replace('.', '', urlencode(str_replace('/', '', Hash::make(str_random(10)))));
+        $code = str_replace('.', '', urlencode(str_replace('/', '', str_random(10))));
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'verification_code' => $code,
         ]);
-        Mail::to($request->email)->send(new VerificationMail($user, $code));
+        $unique_code = $code . 'P' . $user->id;
+        Mail::to($request->email)->send(new VerificationMail($user, $unique_code));
         return response()->json([
             'message' => 'User created, please click verification link on mail to activate account',
-            'user' => $user,
+            'user' => $user
         ], 201);
     }
 
@@ -87,7 +88,11 @@ class AuthController extends Controller
     public function userVerify(Request $request)
     {
         $code = $request->code;
-        $user = User::where('verification_code', '=', $code)->first();
+        $b = strrpos($code, "P");
+        $uid = substr($code, $b + 1);
+        $code = substr($code, 0, $b);
+        $user = User::where('verification_code', '=', $code)
+            ->where('id', '=', $uid)->get()->first();
         if ($user === null) {
             return response()->json([
                 'message' => 'Invalid'
@@ -97,7 +102,7 @@ class AuthController extends Controller
         $user->verification_code = NULL;
         $user->save();
         return response()->json([
-            'message' => 'user verified successfully'
+            'message' => 'User verified successfully, you can now login'
         ]);
     }
 
@@ -144,12 +149,16 @@ class AuthController extends Controller
                 'message' => 'account not yet verified. Please click email verification link in your email.'
             ], 401);
         }
-        $token = str_replace('.', '', urlencode(str_replace('/', '', Hash::make(str_random(10)))));
-        PasswordChange::create([
-            'email' => $request->email,
+        $token = str_replace('.', '', urlencode(str_replace('/', '', str_random(10))));
+        $date = (new \DateTime())->modify('+3 day')->format('Y-m-d H:i:s');
+        $pass = PasswordChange::create([
+            'user_id' => $user->id,
             'token' => $token,
+            'expiry_date' => $date
         ]);
-        Mail::to($request->email)->send(new PasswordReset($token, $request->email));
+        $unique_token = $token . 'P' . $pass->id;
+
+        Mail::to($request->email)->send(new PasswordReset($unique_token, $request->email));
         return response()->json([
             'message' => 'Password reset link has been sent to your email',
         ], 201);
@@ -162,11 +171,20 @@ class AuthController extends Controller
     public function checkPasswordToken(Request $request)
     {
         $code = $request->code;
-        $pass_change = PasswordChange::where('token', $code)->first();
+        $b = strrpos($code, "P");
+        $uid = substr($code, $b + 1);
+        $token = substr($code, 0, $b);
+        $pass_change = PasswordChange::where('token', $token)->where('id', '=', $uid)->first();
         if ($pass_change === null) {
             return response()->json([
                 'message' => 'Invalid'
             ], 401);
+        }
+        $now = (new \DateTime())->format('Y-m-d H:i:s');
+        if ($now > $pass_change->expiry_date) {
+            return response()->json([
+                'message' => 'Token expired. Please make a new request for password reset.'
+            ], 498);
         }
         return response()->json([
             'message' => 'password token verified. Renders new password view',
@@ -188,16 +206,25 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->all()], 422);
         }
-        $pass_change = PasswordChange::where('token', $request->token)->first();
-        if (!$pass_change) {
+        $code = $request->token;
+        $b = strrpos($code, "P");
+        $uid = substr($code, $b + 1);
+        $code = substr($code, 0, $b);
+        $pass_change = PasswordChange::where('token', $code)->where('id', '=', $uid)->first();
+        if ($pass_change === null) {
             return response()->json([
-                'message' => 'invalid token'
+                'message' => 'Invalid'
             ], 401);
         }
-        $user = User::where('email', $pass_change->email)->first();
+        $now = (new \DateTime())->format('Y-m-d H:i:s');
+        if ($now > $pass_change->expiry_date) {
+            return response()->json([
+                'message' => 'Token expired'
+            ], 498);
+        }
+        $user = User::where('id', $pass_change->user_id)->first();
         $user->password = Hash::make($request->new_password);
-        $pass_change->token = NULL;
-        $pass_change->save();
+        $pass_change->delete();
         $user->save();
         return response()->json([
             'message' => 'password changed successfully'

@@ -12,8 +12,9 @@ class PasswordChange extends Model
      * @var array
      */
     protected $fillable = [
-        'token', 'email'
+        'token', 'user_id','expiry_date'
     ];
+    public $timestamps = false;
 
     /**
      * The attributes excluded from the model's JSON form.
@@ -21,6 +22,6 @@ class PasswordChange extends Model
      * @var array
      */
     protected $hidden = [
-      'created_at' , 'updated_at', 'token'
+      'token'
     ];
 }

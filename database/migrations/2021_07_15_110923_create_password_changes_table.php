@@ -15,9 +15,10 @@ class CreatePasswordChangesTable extends Migration
     {
         Schema::create('password_changes', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
-            $table->string('email')->foreign('email')->references('email')->on('users');
+            $table->string('user_id')->foreign('user_id')->references('id')->on('users');
             $table->char('token',255)->nullable();
+            $table->timestamp('expiry_date');
+            $table->softDeletes();
         });
     }
 
