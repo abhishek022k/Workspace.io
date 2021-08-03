@@ -21,12 +21,16 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'token' => 'required',
             'name' => 'required|string|between:2,60',
             'email' => 'required|email|max:255|unique:users',
             'password' => 'required|min:8',
         ]);
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->all()], 422);
+        }
+        if(!$this->validateCaptcha($request->token)){
+            return response()->json(['message' => ['Captcha Invalid. Please retry or contact owner if issue persists']], 422);
         }
         $code = str_replace('.', '', urlencode(str_replace('/', '', str_random(10))));
         $user = User::create([
@@ -41,6 +45,18 @@ class AuthController extends Controller
             'message' => 'User created, please click verification link on mail to activate account',
             'user' => $user
         ], 201);
+    }
+
+    /*
+     * Validates google recaptcha token recieved from signup form
+     * @return boolean 
+     */
+    private function validateCaptcha($token){
+        $url = 'https://www.google.com/recaptcha/api/siteverify?secret='.env('CAPTCHA_SECRET').'&response='.$token;
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $result = json_decode(curl_exec($ch),true);
+        return $result['success'];
     }
 
 

@@ -2,9 +2,6 @@
 
 /** @var \Laravel\Lumen\Routing\Router $router */
 
-use App\Http\Controllers\AuthController;
-use \App\Models\User;
-
 /*
 |--------------------------------------------------------------------------
 | Application Routes
