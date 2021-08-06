@@ -29,7 +29,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->all()], 422);
         }
-        if(!$this->validateCaptcha($request->token)){
+        if (!$this->validateCaptcha($request->token)) {
             return response()->json(['message' => ['Captcha Invalid. Please retry or contact owner if issue persists']], 422);
         }
         $code = str_replace('.', '', urlencode(str_replace('/', '', str_random(10))));
@@ -51,11 +51,12 @@ class AuthController extends Controller
      * Validates google recaptcha token recieved from signup form
      * @return boolean 
      */
-    private function validateCaptcha($token){
-        $url = 'https://www.google.com/recaptcha/api/siteverify?secret='.env('CAPTCHA_SECRET').'&response='.$token;
+    private function validateCaptcha($token)
+    {
+        $url = 'https://www.google.com/recaptcha/api/siteverify?secret=' . env('CAPTCHA_SECRET') . '&response=' . $token;
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $result = json_decode(curl_exec($ch),true);
+        $result = json_decode(curl_exec($ch), true);
         return $result['success'];
     }
 

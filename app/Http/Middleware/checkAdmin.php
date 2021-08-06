@@ -15,11 +15,11 @@ class checkAdmin
      */
     public function handle($request, Closure $next)
     {
-        if($request->user()->admin_access > 0){
+        if ($request->user()->admin_access > 0) {
             return $next($request);
         }
         return response()->json([
             'message' => 'Access Denied'
-        ],401);
+        ], 401);
     }
 }

@@ -15,7 +15,7 @@ class AddVerificationToUsers extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->tinyInteger('verified')->default(0);
-            $table->char('verification_code',255)->nullable();
+            $table->char('verification_code', 255)->nullable();
         });
     }
 

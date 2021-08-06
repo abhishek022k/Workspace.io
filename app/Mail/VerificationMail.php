@@ -11,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 class VerificationMail extends Mailable
 {
     use Queueable, SerializesModels;
-    protected $user,$code;
+    protected $user, $code;
 
     /**
      * Create a new message instance.
@@ -32,10 +32,10 @@ class VerificationMail extends Mailable
     public function build()
     {
         return $this->view('emails.verification')
-                    ->with([
-                        'name' => $this->user->name,
-                        'email' => $this->user->email,
-                        'code' => $this->code,
-                    ]);
+            ->with([
+                'name' => $this->user->name,
+                'email' => $this->user->email,
+                'code' => $this->code,
+            ]);
     }
 }

@@ -5,4 +5,4 @@
 </p>
 <a href="http://localhost:8000/auth/verify/{{$code}}">verification link</a>
 <p>Thanks, <br>
-Workspace.io.</p>
+    Workspace.io.</p>

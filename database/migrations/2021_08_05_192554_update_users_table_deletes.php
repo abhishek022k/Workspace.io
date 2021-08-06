@@ -13,7 +13,7 @@ class UpdateUsersTableDeletes extends Migration
      */
     public function up()
     {
-        Schema::table('users', function(Blueprint $table){
+        Schema::table('users', function (Blueprint $table) {
             $table->softDeletes();
             $table->unsignedMediumInteger('deleted_by')->nullable();
             $table->unsignedMediumInteger('updated_by')->nullable();
@@ -29,7 +29,7 @@ class UpdateUsersTableDeletes extends Migration
      */
     public function down()
     {
-        Schema::table('users', function(Blueprint $table){
+        Schema::table('users', function (Blueprint $table) {
             $table->dropIfExists('deleted_at');
             $table->dropIfExists('deleted_by');
             $table->dropIfExists('updated_by');
