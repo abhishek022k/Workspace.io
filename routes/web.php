@@ -36,11 +36,16 @@ $router->post('auth/signup', 'AuthController@register');
 // $router->get('auth/user','AuthController@getAuthUser');
 
 $router->group(['middleware' => ['auth', 'checkAdmin']], function ($router) {
-    $router->get('users/list', 'UserController@showUsers');
+    $router->post('users/delete','UserController@delete');
+    $router->post('users/restore','UserController@restore');
 });
 $router->group(['middleware' => 'auth'], function ($router) {
+    $router->get('users/list', 'UserController@showList');
+    $router->get('users/{user}','UserController@detail');
     $router->get('auth/user', 'AuthController@getAuthUser');
     $router->post('auth/logout', 'AuthController@logout');
+    $router->post('tasks/create', 'TaskController@create');
+    $router->post('tasks/update', 'TaskController@update');
 });
 $router->get('auth/verify/{code}', 'AuthController@userVerify');
 $router->post('auth/forgot-password', 'AuthController@resetPasswordMail');

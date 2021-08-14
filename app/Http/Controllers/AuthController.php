@@ -143,8 +143,9 @@ class AuthController extends Controller
      */
     public function getAuthUser()
     {
+        $user = User::find(Auth::user()->id)->makeVisible(['admin_access']);
         return response()->json([
-            'user' => Auth::user(),
+            'user' => $user,
         ], 200);
     }
 

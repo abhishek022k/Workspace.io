@@ -17,8 +17,8 @@ class UpdateUsersTableDeletes extends Migration
             $table->softDeletes();
             $table->unsignedMediumInteger('deleted_by')->nullable();
             $table->unsignedMediumInteger('updated_by')->nullable();
-            $table->foreign('deleted_by')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
-            $table->foreign('updated_by')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('deleted_by')->references('id')->on('users');
+            $table->foreign('updated_by')->references('id')->on('users');
         });
     }
 
