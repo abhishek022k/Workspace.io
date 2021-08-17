@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\PasswordReset;
-use App\Mail\VerificationMail;
+use App\Jobs\SendPasswordResetMail;
 use App\Models\PasswordChange;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
-
+use App\Jobs\SendVerificationEmail;
 class AuthController extends Controller
 {
     /*
@@ -40,7 +38,7 @@ class AuthController extends Controller
             'verification_code' => $code,
         ]);
         $unique_code = $code . 'P' . $user->id;
-        Mail::to($request->email)->send(new VerificationMail($user, $unique_code));
+        dispatch(new SendVerificationEmail($request->email,$user, $unique_code));
         return response()->json([
             'message' => 'User created, please click verification link on mail to activate account',
             'user' => $user
@@ -79,7 +77,7 @@ class AuthController extends Controller
                 'message' => 'User not verified. Please click the verification link sent to you via email',
             ], 401);
         }
-        return $this->tokenResponse($token);
+        return $this->tokenResponse($token, $user);
     }
 
 
@@ -88,12 +86,13 @@ class AuthController extends Controller
      * @param $token string
      * @return JSON response
      */
-    protected function tokenResponse($token)
+    protected function tokenResponse($token,$user)
     {
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => Auth::factory()->getTTL() * 60,
+            'user' => $user
         ]);
     }
 
@@ -175,8 +174,8 @@ class AuthController extends Controller
             'expiry_date' => $date
         ]);
         $unique_token = $token . 'P' . $pass->id;
+        dispatch(new SendPasswordResetMail($request->email,$unique_token, $request->email));
 
-        Mail::to($request->email)->send(new PasswordReset($unique_token, $request->email));
         return response()->json([
             'message' => 'Password reset link has been sent to your email',
         ], 201);

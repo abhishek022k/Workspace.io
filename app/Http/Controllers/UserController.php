@@ -51,6 +51,7 @@ class UserController extends Controller
     public function detail(Request $request)
     {
         $user = User::withTrashed()->find($request->user);
+        $user->makeVisible("deleted_at");
         if ($user) {
             return response()->json([
                 'user' => $user,
@@ -86,5 +87,11 @@ class UserController extends Controller
         return response()->json([
             'message' => "User does not exist"
         ], 404);
+    }
+    public function allUsers(){
+        $users = User::where("verified","=",1)->get();
+        return response()->json([
+            'results' => $users,
+        ]);
     }
 }

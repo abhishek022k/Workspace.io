@@ -23,8 +23,8 @@ class CreateTasksTable extends Migration
             $table->unsignedMediumInteger('assignee')->nullable();
             $table->string("status",18);
             $table->longText('description')->nullable();
-            $table->foreign('created_by')->references('id')->on('users');
-            $table->foreign('assignee')->references('id')->on('users');
+            $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('assignee')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

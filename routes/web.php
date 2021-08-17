@@ -41,11 +41,13 @@ $router->group(['middleware' => ['auth', 'checkAdmin']], function ($router) {
 });
 $router->group(['middleware' => 'auth'], function ($router) {
     $router->get('users/list', 'UserController@showList');
+    $router->get('users/list-all', 'UserController@allUsers');
     $router->get('users/{user}','UserController@detail');
     $router->get('auth/user', 'AuthController@getAuthUser');
     $router->post('auth/logout', 'AuthController@logout');
     $router->post('tasks/create', 'TaskController@create');
     $router->post('tasks/update', 'TaskController@update');
+    $router->get('tasks/list', 'TaskController@showList');
 });
 $router->get('auth/verify/{code}', 'AuthController@userVerify');
 $router->post('auth/forgot-password', 'AuthController@resetPasswordMail');
