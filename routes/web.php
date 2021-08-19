@@ -48,6 +48,8 @@ $router->group(['middleware' => 'auth'], function ($router) {
     $router->post('tasks/create', 'TaskController@create');
     $router->post('tasks/update', 'TaskController@update');
     $router->get('tasks/list', 'TaskController@showList');
+    $router->get('tasks/pie','TaskController@retrievePieData');
+    $router->get('tasks/col','TaskController@retrieveColumnData');
 });
 $router->get('auth/verify/{code}', 'AuthController@userVerify');
 $router->post('auth/forgot-password', 'AuthController@resetPasswordMail');

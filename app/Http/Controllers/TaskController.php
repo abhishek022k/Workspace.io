@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Notifications\NewTaskMail;
 use App\Notifications\StatusUpdate;
 use App\Notifications\TaskUpdate;
+use Illuminate\Support\Facades\DB;
 use Pusher\Pusher;
 
 class TaskController extends Controller
@@ -120,6 +121,42 @@ class TaskController extends Controller
             $q->where('created_by', '=', $ar);
         })->get();
         return response()->json(['results' => $this->modifyIncludeUsers($tasks)]);
+    }
+
+    public function retrievePieData(Request $request){
+        $user = Auth::user();
+        $tasks = DB::select('SELECT Status , count(*) as Total 
+        FROM (
+        SELECT id, 
+                CASE
+                    WHEN (status = "COMPLETED" AND updated_at <= due_date)
+                    THEN "COMPLETED ON TIME"
+                    WHEN (status = "COMPLETED" AND updated_at > due_date)
+                    THEN "COMPLETED AFTER DEADLINE"
+                    WHEN ((status = "IN PROGRESS" OR status = "ASSIGNED") AND due_date <= CURRENT_TIMESTAMP) THEN "OVERDUE"
+                    ELSE status END AS Status
+                FROM tasks 
+                WHERE assignee = '.$user->id.') AS St
+        GROUP BY Status;');
+        return response()->json(['results' => $tasks]);
+    }
+
+    public function retrieveColumnData(Request $request){
+        $user = Auth::user();
+        $tasks = DB::select('SELECT Status , count(*) as Total , MONTH(updated_at) as Month
+        FROM (
+        SELECT id, updated_at,
+                CASE
+                    WHEN (status = "COMPLETED" AND updated_at <= due_date)
+                    THEN "Completed on time"
+                    WHEN (status = "COMPLETED" AND updated_at > due_date)
+                    THEN "Completed after deadline"
+                    WHEN ((status = "IN PROGRESS" OR status = "ASSIGNED") AND due_date <= CURRENT_TIMESTAMP) THEN "Overdue"
+                    ELSE "All due" END AS Status
+                FROM tasks 
+                WHERE assignee = '.$user->id.' AND (YEAR(CURRENT_TIMESTAMP)-YEAR(updated_at)) <= 1) AS St
+        GROUP BY Status, Month;');
+        return response()->json(['results' => $tasks]);
     }
 
     private function modifyIncludeUsers($tasks)
